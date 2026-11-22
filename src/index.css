@@ -528,6 +528,51 @@ img {
   background: #541010;
 }
 
+.menu-relatorios {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-top: 30px;
+}
+
+.menu-relatorios button {
+  min-height: 120px;
+  padding: 20px;
+  background: var(--cor-branca);
+  border: var(--borda);
+  border-top: 4px solid var(--cor-amarela);
+  border-radius: 10px;
+  box-shadow: var(--sombra);
+  color: var(--cor-texto);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+
+.menu-relatorios button:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.12);
+}
+
+.card-menu.relatorios {
+  grid-column: 2;
+}
+
+@media (max-width: 700px) {
+  .card-menu.relatorios {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .menu-relatorios {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 600px) {
   .grade-filtros {
     grid-template-columns: 1fr;

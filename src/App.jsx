@@ -311,6 +311,15 @@ const App = () => {
                 <strong>Movimentações</strong>
                 <small>Consultar entradas e saídas</small>
               </button>
+
+              <button
+                className="card-menu relatorios"
+                onClick={() => setTela("relatorios")}
+              >
+                <span className="icone">📊</span>
+                <strong>Relatórios</strong>
+                <small>Consultar resultados financeiros</small>
+              </button>
             </div>
           </>
         ) : (
@@ -642,6 +651,27 @@ const App = () => {
                     )}
                   </div>
                 )}
+              </>
+            )}
+
+            {tela === "relatorios" && (
+              <>
+                <h2>Relatórios financeiros</h2>
+                <p>Consulte os resultados financeiros da hamburgueria.</p>
+
+                <div className="menu-relatorios">
+                  <button onClick={() => setTela("relatorio-semanal")}>
+                    Relatório semanal
+                  </button>
+
+                  <button onClick={() => setTela("relatorio-mensal")}>
+                    Relatório mensal
+                  </button>
+
+                  <button onClick={() => setTela("relatorio-anual")}>
+                    Relatório anual
+                  </button>
+                </div>
               </>
             )}
           </div>
