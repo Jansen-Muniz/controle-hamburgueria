@@ -658,6 +658,11 @@ img {
   gap: 10px;
 }
 
+.titulo-grupo-historico {
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
 .item-historico-relatorio {
   display: flex;
   justify-content: space-between;
@@ -705,6 +710,20 @@ img {
 
 .botao-toggle-historico:active {
   transform: translateY(0);
+}
+
+#data-relatorio-semanal {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 10px;
+  font-size: 16px;
+}
+
+.filtros-relatorio > div {
+  width: 100%;
+  max-width: 260px;
 }
 
 @media (max-width: 600px) {

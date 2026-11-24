@@ -35,13 +35,16 @@ const App = () => {
   const [historicoExpandido, setHistoricoExpandido] = useState(false)
   const [historicoSemanalExpandido, setHistoricoSemanalExpandido] =
     useState(false)
+  const [historicoEntradasAnualExpandido, setHistoricoEntradasAnualExpandido] =
+    useState(false)
+  const [historicoSaidasAnualExpandido, setHistoricoSaidasAnualExpandido] =
+    useState(false)
   const [dataRelatorioSemanal, setDataRelatorioSemanal] = useState(
     new Date().toLocaleDateString("en-CA"),
   )
   const [mesRelatorio, setMesRelatorio] = useState(
     String(new Date().getMonth() + 1).padStart(2, "0"),
   )
-
   const [anoRelatorio, setAnoRelatorio] = useState(
     String(new Date().getFullYear()),
   )
@@ -259,6 +262,51 @@ const App = () => {
   const saldoSemana = totalEntradasSemana - totalSaidasSemana
 
   const anoMesRelatorio = `${anoRelatorio}-${mesRelatorio}`
+
+  const movimentacoesDoAno = movimentacoes.filter(
+    (item) => item.data?.slice(0, 4) === anoRelatorio,
+  )
+
+  const entradasAno = movimentacoesDoAno.filter(
+    (item) => item.tipo === "entrada",
+  )
+
+  const saidasAno = movimentacoesDoAno.filter((item) => item.tipo === "saida")
+
+  const totalEntradasAno = entradasAno.reduce(
+    (total, item) => total + Number(item.valor || 0),
+    0,
+  )
+
+  const totalPixAno = entradasAno.reduce(
+    (total, item) => total + Number(item.pix || 0),
+    0,
+  )
+
+  const totalEspecieAno = entradasAno.reduce(
+    (total, item) => total + Number(item.especie || 0),
+    0,
+  )
+
+  const totalCartaoAno = entradasAno.reduce(
+    (total, item) => total + Number(item.cartao || 0),
+    0,
+  )
+
+  const despesasPorCategoriaAno = saidasAno.reduce((grupos, item) => {
+    const categoria = item.categoria || "Outros"
+
+    grupos[categoria] = (grupos[categoria] || 0) + Number(item.valor || 0)
+
+    return grupos
+  }, {})
+
+  const totalSaidasAno = saidasAno.reduce(
+    (total, item) => total + Number(item.valor || 0),
+    0,
+  )
+
+  const saldoAno = totalEntradasAno - totalSaidasAno
 
   const movimentacoesDoRelatorio = movimentacoes.filter(
     (item) => item.data?.slice(0, 7) === anoMesRelatorio,
@@ -943,25 +991,21 @@ const App = () => {
                   {movimentacoesDoRelatorio.length === 0 ? (
                     <p>Nenhuma movimentação registrada neste mês.</p>
                   ) : (
-                    <>
-                      {historicoExpandido && (
+                    historicoExpandido && (
+                      <>
+                        <h3 className="titulo-grupo-historico">Entradas</h3>
+
                         <div className="lista-historico-relatorio">
-                          {[...movimentacoesDoRelatorio]
+                          {movimentacoesDoRelatorio
+                            .filter((item) => item.tipo === "entrada")
                             .sort((a, b) => b.data.localeCompare(a.data))
                             .map((item, indice) => (
                               <div
                                 className="item-historico-relatorio"
-                                key={`${item.data}-${indice}`}
+                                key={`entrada-${item.data}-${indice}`}
                               >
                                 <div>
-                                  <strong>
-                                    {item.tipo === "entrada"
-                                      ? "Venda"
-                                      : item.descricao ||
-                                        item.categoria ||
-                                        "Despesa"}
-                                  </strong>
-
+                                  <strong>Venda</strong>
                                   <span>
                                     {new Date(
                                       `${item.data}T00:00:00`,
@@ -969,20 +1013,45 @@ const App = () => {
                                   </span>
                                 </div>
 
-                                <strong
-                                  className={
-                                    item.tipo === "entrada"
-                                      ? "valor-entrada"
-                                      : "valor-saida"
-                                  }
-                                >
+                                <strong className="valor-entrada">
                                   {formatarValor(item.valor)}
                                 </strong>
                               </div>
                             ))}
                         </div>
-                      )}
-                    </>
+
+                        <h3 className="titulo-grupo-historico">Saídas</h3>
+
+                        <div className="lista-historico-relatorio">
+                          {movimentacoesDoRelatorio
+                            .filter((item) => item.tipo === "saida")
+                            .sort((a, b) => b.data.localeCompare(a.data))
+                            .map((item, indice) => (
+                              <div
+                                className="item-historico-relatorio"
+                                key={`saida-${item.data}-${indice}`}
+                              >
+                                <div>
+                                  <strong>
+                                    {item.descricao ||
+                                      item.categoria ||
+                                      "Despesa"}
+                                  </strong>
+                                  <span>
+                                    {new Date(
+                                      `${item.data}T00:00:00`,
+                                    ).toLocaleDateString("pt-BR")}
+                                  </span>
+                                </div>
+
+                                <strong className="valor-saida">
+                                  {formatarValor(item.valor)}
+                                </strong>
+                              </div>
+                            ))}
+                        </div>
+                      </>
+                    )
                   )}
                 </div>
 
@@ -1103,43 +1172,267 @@ const App = () => {
                     <p>Nenhuma movimentação registrada nesta semana.</p>
                   ) : (
                     historicoSemanalExpandido && (
-                      <div className="lista-historico-relatorio">
-                        {[...movimentacoesDaSemana]
-                          .sort((a, b) => b.data.localeCompare(a.data))
-                          .map((item, indice) => (
-                            <div
-                              className="item-historico-relatorio"
-                              key={`${item.data}-${indice}`}
-                            >
-                              <div>
-                                <strong>
-                                  {item.tipo === "entrada"
-                                    ? "Venda"
-                                    : item.descricao ||
+                      <>
+                        <h3 className="titulo-grupo-historico">Entradas</h3>
+
+                        <div className="lista-historico-relatorio">
+                          {movimentacoesDaSemana
+                            .filter((item) => item.tipo === "entrada")
+                            .sort((a, b) => b.data.localeCompare(a.data))
+                            .map((item, indice) => (
+                              <div
+                                className="item-historico-relatorio"
+                                key={`entrada-${item.data}-${indice}`}
+                              >
+                                <div>
+                                  <strong>Venda</strong>
+                                  <span>
+                                    {new Date(
+                                      `${item.data}T00:00:00`,
+                                    ).toLocaleDateString("pt-BR")}
+                                  </span>
+                                </div>
+
+                                <strong className="valor-entrada">
+                                  {formatarValor(item.valor)}
+                                </strong>
+                              </div>
+                            ))}
+                        </div>
+
+                        <h3 className="titulo-grupo-historico">Saídas</h3>
+
+                        <div className="lista-historico-relatorio">
+                          {movimentacoesDaSemana
+                            .filter((item) => item.tipo === "saida")
+                            .sort((a, b) => b.data.localeCompare(a.data))
+                            .map((item, indice) => (
+                              <div
+                                className="item-historico-relatorio"
+                                key={`saida-${item.data}-${indice}`}
+                              >
+                                <div>
+                                  <strong>
+                                    {item.descricao ||
                                       item.categoria ||
                                       "Despesa"}
+                                  </strong>
+                                  <span>
+                                    {new Date(
+                                      `${item.data}T00:00:00`,
+                                    ).toLocaleDateString("pt-BR")}
+                                  </span>
+                                </div>
+
+                                <strong className="valor-saida">
+                                  {formatarValor(item.valor)}
                                 </strong>
-
-                                <span>
-                                  {new Date(
-                                    `${item.data}T00:00:00`,
-                                  ).toLocaleDateString("pt-BR")}
-                                </span>
                               </div>
-
-                              <strong
-                                className={
-                                  item.tipo === "entrada"
-                                    ? "valor-entrada"
-                                    : "valor-saida"
-                                }
-                              >
-                                {formatarValor(item.valor)}
-                              </strong>
-                            </div>
-                          ))}
-                      </div>
+                            ))}
+                        </div>
+                      </>
                     )
+                  )}
+                </div>
+
+                <button
+                  className="botao-voltar-relatorios"
+                  onClick={() => setTela("relatorios")}
+                >
+                  ← Voltar aos relatórios
+                </button>
+              </>
+            )}
+
+            {tela === "relatorio-anual" && (
+              <>
+                <h2>Relatório anual</h2>
+                <p>Consulte os resultados financeiros por ano.</p>
+
+                <div className="filtros-relatorio">
+                  <div>
+                    <label htmlFor="ano-relatorio-anual">Ano</label>
+
+                    <select
+                      id="ano-relatorio-anual"
+                      value={anoRelatorio}
+                      onChange={(e) => setAnoRelatorio(e.target.value)}
+                    >
+                      {Array.from(
+                        { length: 5 },
+                        (_, i) => new Date().getFullYear() - i,
+                      ).map((ano) => (
+                        <option key={ano} value={String(ano)}>
+                          {ano}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="resumo-financeiro">
+                  <div className="card-resumo">
+                    <h3>Total de entradas</h3>
+                    <p className="valor-entrada">
+                      {formatarValor(totalEntradasAno)}
+                    </p>
+                  </div>
+
+                  <div className="card-resumo">
+                    <h3>Total de saídas</h3>
+                    <p className="valor-saida">
+                      {formatarValor(totalSaidasAno)}
+                    </p>
+                  </div>
+
+                  <div className="card-resumo">
+                    <h3>Saldo do ano</h3>
+                    <p>{formatarValor(saldoAno)}</p>
+                  </div>
+                </div>
+
+                <div className="resumo-financeiro">
+                  <div className="card-resumo">
+                    <h3>Vendas por PIX</h3>
+                    <p>{formatarValor(totalPixAno)}</p>
+                  </div>
+
+                  <div className="card-resumo">
+                    <h3>Vendas em dinheiro</h3>
+                    <p>{formatarValor(totalEspecieAno)}</p>
+                  </div>
+
+                  <div className="card-resumo">
+                    <h3>Vendas no cartão</h3>
+                    <p>{formatarValor(totalCartaoAno)}</p>
+                  </div>
+                </div>
+
+                <div className="secao-despesas">
+                  <h3>Despesas por categoria</h3>
+
+                  {Object.keys(despesasPorCategoriaAno).length === 0 ? (
+                    <p>Nenhuma despesa registrada neste ano.</p>
+                  ) : (
+                    <div className="lista-despesas-categoria">
+                      {Object.entries(despesasPorCategoriaAno).map(
+                        ([categoria, valor]) => (
+                          <div
+                            className="item-despesa-categoria"
+                            key={categoria}
+                          >
+                            <strong>{categoria}</strong>
+                            <span>{formatarValor(valor)}</span>
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="secao-historico">
+                  <h3>Histórico de movimentações</h3>
+
+                  {movimentacoesDoAno.length === 0 ? (
+                    <p>Nenhuma movimentação registrada neste ano.</p>
+                  ) : (
+                    <>
+                      <div className="cabecalho-historico">
+                        <h3>Entradas</h3>
+
+                        <button
+                          type="button"
+                          className="botao-toggle-historico"
+                          onClick={() =>
+                            setHistoricoEntradasAnualExpandido(
+                              !historicoEntradasAnualExpandido,
+                            )
+                          }
+                        >
+                          {historicoEntradasAnualExpandido
+                            ? "Recolher"
+                            : "Ver entradas"}
+                          {historicoEntradasAnualExpandido ? " ▲" : " ▼"}
+                        </button>
+                      </div>
+
+                      {historicoEntradasAnualExpandido && (
+                        <div className="lista-historico-relatorio">
+                          {movimentacoesDoAno
+                            .filter((item) => item.tipo === "entrada")
+                            .sort((a, b) => b.data.localeCompare(a.data))
+                            .map((item, indice) => (
+                              <div
+                                className="item-historico-relatorio"
+                                key={`entrada-${item.data}-${indice}`}
+                              >
+                                <div>
+                                  <strong>Venda</strong>
+                                  <span>
+                                    {new Date(
+                                      `${item.data}T00:00:00`,
+                                    ).toLocaleDateString("pt-BR")}
+                                  </span>
+                                </div>
+
+                                <strong className="valor-entrada">
+                                  {formatarValor(item.valor)}
+                                </strong>
+                              </div>
+                            ))}
+                        </div>
+                      )}
+
+                      <div className="cabecalho-historico">
+                        <h3>Saídas</h3>
+
+                        <button
+                          type="button"
+                          className="botao-toggle-historico"
+                          onClick={() =>
+                            setHistoricoSaidasAnualExpandido(
+                              !historicoSaidasAnualExpandido,
+                            )
+                          }
+                        >
+                          {historicoSaidasAnualExpandido
+                            ? "Recolher"
+                            : "Ver saídas"}
+                          {historicoSaidasAnualExpandido ? " ▲" : " ▼"}
+                        </button>
+                      </div>
+
+                      {historicoSaidasAnualExpandido && (
+                        <div className="lista-historico-relatorio">
+                          {movimentacoesDoAno
+                            .filter((item) => item.tipo === "saida")
+                            .sort((a, b) => b.data.localeCompare(a.data))
+                            .map((item, indice) => (
+                              <div
+                                className="item-historico-relatorio"
+                                key={`saida-${item.data}-${indice}`}
+                              >
+                                <div>
+                                  <strong>
+                                    {item.descricao ||
+                                      item.categoria ||
+                                      "Despesa"}
+                                  </strong>
+                                  <span>
+                                    {new Date(
+                                      `${item.data}T00:00:00`,
+                                    ).toLocaleDateString("pt-BR")}
+                                  </span>
+                                </div>
+
+                                <strong className="valor-saida">
+                                  {formatarValor(item.valor)}
+                                </strong>
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 
