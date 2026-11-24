@@ -561,6 +561,158 @@ img {
   grid-column: 2;
 }
 
+.filtros-relatorio {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin: 30px 0;
+  flex-wrap: wrap;
+}
+
+.filtros-relatorio div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 180px;
+}
+
+.filtros-relatorio label {
+  font-weight: 600;
+  color: var(--cor-texto);
+}
+
+.filtros-relatorio select {
+  padding: 12px;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  background: var(--cor-branca);
+  color: var(--cor-texto);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.botao-voltar-relatorios {
+  display: inline-block;
+  margin-top: 25px;
+  padding: 12px 22px;
+  background-color: var(--cor-vermelha);
+  color: var(--cor-branca);
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.botao-voltar-relatorios:hover {
+  background-color: #571010;
+}
+
+.secao-despesas {
+  margin-top: 30px;
+}
+
+.secao-despesas h3 {
+  color: var(--cor-azul);
+  font-size: 18px;
+  margin-bottom: 15px;
+}
+
+.lista-despesas-categoria {
+  display: grid;
+  gap: 10px;
+}
+
+.item-despesa-categoria {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 18px;
+  background-color: var(--cor-fundo);
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+}
+
+.item-despesa-categoria strong {
+  color: var(--cor-texto);
+}
+
+.item-despesa-categoria span {
+  color: var(--cor-vermelha);
+  font-weight: 600;
+}
+
+.secao-historico {
+  margin-top: 30px;
+}
+
+.secao-historico h3 {
+  color: var(--cor-azul);
+  font-size: 18px;
+  margin-bottom: 15px;
+}
+
+.lista-historico-relatorio {
+  display: grid;
+  gap: 10px;
+}
+
+.item-historico-relatorio {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  padding: 14px 18px;
+  background-color: var(--cor-fundo);
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+}
+
+.item-historico-relatorio div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.item-historico-relatorio span {
+  color: var(--cor-texto-secundario);
+  font-size: 13px;
+}
+
+.item-historico-relatorio strong {
+  font-size: 14px;
+}
+
+.botao-toggle-historico {
+  background-color: var(--cor-vermelha);
+  color: var(--cor-branca);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.botao-toggle-historico:hover {
+  background-color: #5c1010;
+  transform: translateY(-2px);
+}
+
+.botao-toggle-historico:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 600px) {
+  .item-historico-relatorio {
+    padding: 12px;
+  }
+}
+
 @media (max-width: 700px) {
   .card-menu.relatorios {
     grid-column: auto;

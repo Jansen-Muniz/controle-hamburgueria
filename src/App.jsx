@@ -32,6 +32,19 @@ const App = () => {
   const [categoriaFiltro, setCategoriaFiltro] = useState("todas")
   const [busca, setBusca] = useState("")
   const [formaPagamento, setFormaPagamento] = useState("todas")
+  const [historicoExpandido, setHistoricoExpandido] = useState(false)
+  const [historicoSemanalExpandido, setHistoricoSemanalExpandido] =
+    useState(false)
+  const [dataRelatorioSemanal, setDataRelatorioSemanal] = useState(
+    new Date().toLocaleDateString("en-CA"),
+  )
+  const [mesRelatorio, setMesRelatorio] = useState(
+    String(new Date().getMonth() + 1).padStart(2, "0"),
+  )
+
+  const [anoRelatorio, setAnoRelatorio] = useState(
+    String(new Date().getFullYear()),
+  )
 
   useEffect(() => {
     if (!mensagem) return
@@ -56,6 +69,7 @@ const App = () => {
         const dados = await buscarMovimentacoes()
 
         setMovimentacoes(dados)
+        console.log("Movimentações recebidas:", dados)
       } catch (erro) {
         console.error(erro)
         setErroMovimentacoes("Não foi possível carregar as movimentações.")
@@ -68,12 +82,19 @@ const App = () => {
   }, [tela])
 
   const formatarMoeda = (valor) => {
-    const numeros = valor.replace(/\D/g, "")
+    const numeros = String(valor ?? "").replace(/\D/g, "")
     const numero = (Number(numeros) / 100).toFixed(2)
 
     return (
       "R$ " + numero.replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, ".")
     )
+  }
+
+  const formatarValor = (valor) => {
+    return Number(valor || 0).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    })
   }
 
   const atualizarValor = (campo, valor) => {
@@ -166,6 +187,125 @@ const App = () => {
     .reduce((total, item) => total + Number(item.valor), 0)
 
   const saldoMes = totalEntradas - totalSaidas
+
+  const dataReferencia = new Date(`${dataRelatorioSemanal}T00:00:00`)
+
+  const inicioSemana = new Date(dataReferencia)
+  const diaSemana = inicioSemana.getDay()
+
+  inicioSemana.setDate(
+    inicioSemana.getDate() - (diaSemana === 0 ? 6 : diaSemana - 1),
+  )
+
+  const fimSemana = new Date(inicioSemana)
+  fimSemana.setDate(inicioSemana.getDate() + 6)
+
+  const formatarDataISO = (data) => {
+    const ano = data.getFullYear()
+    const mes = String(data.getMonth() + 1).padStart(2, "0")
+    const dia = String(data.getDate()).padStart(2, "0")
+
+    return `${ano}-${mes}-${dia}`
+  }
+
+  const inicioSemanaISO = formatarDataISO(inicioSemana)
+  const fimSemanaISO = formatarDataISO(fimSemana)
+
+  const movimentacoesDaSemana = movimentacoes.filter(
+    (item) => item.data >= inicioSemanaISO && item.data <= fimSemanaISO,
+  )
+
+  const entradasSemana = movimentacoesDaSemana.filter(
+    (item) => item.tipo === "entrada",
+  )
+
+  const saidasSemana = movimentacoesDaSemana.filter(
+    (item) => item.tipo === "saida",
+  )
+
+  const totalEntradasSemana = entradasSemana.reduce(
+    (total, item) => total + Number(item.valor || 0),
+    0,
+  )
+
+  const totalSaidasSemana = saidasSemana.reduce(
+    (total, item) => total + Number(item.valor || 0),
+    0,
+  )
+
+  const totalPixSemana = entradasSemana.reduce(
+    (total, item) => total + Number(item.pix || 0),
+    0,
+  )
+
+  const totalEspecieSemana = entradasSemana.reduce(
+    (total, item) => total + Number(item.especie || 0),
+    0,
+  )
+
+  const totalCartaoSemana = entradasSemana.reduce(
+    (total, item) => total + Number(item.cartao || 0),
+    0,
+  )
+
+  const despesasPorCategoriaSemana = saidasSemana.reduce((grupos, item) => {
+    const categoria = item.categoria || "Outros"
+
+    grupos[categoria] = (grupos[categoria] || 0) + Number(item.valor || 0)
+
+    return grupos
+  }, {})
+
+  const saldoSemana = totalEntradasSemana - totalSaidasSemana
+
+  const anoMesRelatorio = `${anoRelatorio}-${mesRelatorio}`
+
+  const movimentacoesDoRelatorio = movimentacoes.filter(
+    (item) => item.data?.slice(0, 7) === anoMesRelatorio,
+  )
+
+  const entradasRelatorio = movimentacoesDoRelatorio.filter(
+    (item) => item.tipo === "entrada",
+  )
+
+  const saidasRelatorio = movimentacoesDoRelatorio.filter(
+    (item) => item.tipo === "saida",
+  )
+
+  const totalEntradasRelatorio = entradasRelatorio.reduce(
+    (total, item) => total + Number(item.valor || 0),
+    0,
+  )
+
+  const totalPixRelatorio = entradasRelatorio.reduce(
+    (total, item) => total + Number(item.pix || 0),
+    0,
+  )
+
+  const totalEspecieRelatorio = entradasRelatorio.reduce(
+    (total, item) => total + Number(item.especie || 0),
+    0,
+  )
+
+  const totalCartaoRelatorio = entradasRelatorio.reduce(
+    (total, item) => total + Number(item.cartao || 0),
+    0,
+  )
+
+  const totalSaidasRelatorio = saidasRelatorio.reduce(
+    (total, item) => total + Number(item.valor || 0),
+    0,
+  )
+
+  const despesasPorCategoria = saidasRelatorio.reduce((grupos, item) => {
+    const categoria = item.categoria || "Outros"
+
+    grupos[categoria] = (grupos[categoria] || 0) + Number(item.valor || 0)
+
+    return grupos
+  }, {})
+
+  const saldoRelatorio = totalEntradasRelatorio - totalSaidasRelatorio
 
   hoje.setHours(0, 0, 0, 0)
 
@@ -328,67 +468,71 @@ const App = () => {
               ← Voltar ao início
             </button>
 
-            {tela === "entrada" && (
-              <>
-                <h2>Registrar entrada</h2>
-                <p>Informe os valores das vendas.</p>
+            <>
+              {tela === "entrada" && (
+                <>
+                  <h2>Registrar entrada</h2>
+                  <p>Informe os valores das vendas.</p>
 
-                <form className="formulario-entrada">
-                  <label>PIX</label>
-                  <input
-                    type="text"
-                    placeholder="R$ 0,00"
-                    value={venda.pix}
-                    onChange={(e) => atualizarValor("pix", e.target.value)}
-                  />
+                  <form className="formulario-entrada">
+                    <label>PIX</label>
+                    <input
+                      type="text"
+                      placeholder="R$ 0,00"
+                      value={venda.pix}
+                      onChange={(e) => atualizarValor("pix", e.target.value)}
+                    />
 
-                  <label>Espécie</label>
-                  <input
-                    type="text"
-                    placeholder="R$ 0,00"
-                    value={venda.especie}
-                    onChange={(e) => atualizarValor("especie", e.target.value)}
-                  />
-
-                  <label>Cartão</label>
-                  <input
-                    type="text"
-                    placeholder="R$ 0,00"
-                    value={venda.cartao}
-                    onChange={(e) => atualizarValor("cartao", e.target.value)}
-                  />
-
-                  <label>Data da venda</label>
-                  <input
-                    type="date"
-                    value={venda.data}
-                    onChange={(e) =>
-                      setVenda({ ...venda, data: e.target.value })
-                    }
-                  />
-
-                  {mensagem && (
-                    <p
-                      className={
-                        mensagem.includes("Erro")
-                          ? "mensagem-erro"
-                          : "mensagem-entrada"
+                    <label>Espécie</label>
+                    <input
+                      type="text"
+                      placeholder="R$ 0,00"
+                      value={venda.especie}
+                      onChange={(e) =>
+                        atualizarValor("especie", e.target.value)
                       }
-                    >
-                      {mensagem}
-                    </p>
-                  )}
+                    />
 
-                  <button
-                    type="button"
-                    className="botao-salvar"
-                    onClick={salvarVenda}
-                  >
-                    Registrar venda
-                  </button>
-                </form>
-              </>
-            )}
+                    <label>Cartão</label>
+                    <input
+                      type="text"
+                      placeholder="R$ 0,00"
+                      value={venda.cartao}
+                      onChange={(e) => atualizarValor("cartao", e.target.value)}
+                    />
+
+                    <label>Data da venda</label>
+                    <input
+                      type="date"
+                      value={venda.data}
+                      onChange={(e) =>
+                        setVenda({ ...venda, data: e.target.value })
+                      }
+                    />
+
+                    {mensagem && (
+                      <p
+                        className={
+                          mensagem.includes("Erro")
+                            ? "mensagem-erro"
+                            : "mensagem-entrada"
+                        }
+                      >
+                        {mensagem}
+                      </p>
+                    )}
+
+                    <button
+                      type="button"
+                      className="botao-salvar"
+                      onClick={salvarVenda}
+                    >
+                      Registrar venda
+                    </button>
+                  </form>
+                </>
+              )}
+            </>
 
             {tela === "saida" && (
               <>
@@ -672,6 +816,339 @@ const App = () => {
                     Relatório anual
                   </button>
                 </div>
+              </>
+            )}
+
+            {tela === "relatorio-mensal" && (
+              <>
+                <h2>Relatório mensal</h2>
+                <p>Consulte os resultados financeiros por mês.</p>
+
+                <div className="filtros-relatorio">
+                  <div>
+                    <label htmlFor="mes-relatorio">Mês</label>
+                    <select
+                      id="mes-relatorio"
+                      value={mesRelatorio}
+                      onChange={(e) => setMesRelatorio(e.target.value)}
+                    >
+                      <option value="01">Janeiro</option>
+                      <option value="02">Fevereiro</option>
+                      <option value="03">Março</option>
+                      <option value="04">Abril</option>
+                      <option value="05">Maio</option>
+                      <option value="06">Junho</option>
+                      <option value="07">Julho</option>
+                      <option value="08">Agosto</option>
+                      <option value="09">Setembro</option>
+                      <option value="10">Outubro</option>
+                      <option value="11">Novembro</option>
+                      <option value="12">Dezembro</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="ano-relatorio">Ano</label>
+                    <select
+                      id="ano-relatorio"
+                      value={anoRelatorio}
+                      onChange={(e) => setAnoRelatorio(e.target.value)}
+                    >
+                      {Array.from(
+                        { length: 5 },
+                        (_, i) => new Date().getFullYear() - i,
+                      ).map((ano) => (
+                        <option key={ano} value={String(ano)}>
+                          {ano}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="resumo-financeiro">
+                  <div className="card-resumo">
+                    <h3>Total de entradas</h3>
+                    <p className="valor-entrada">
+                      {formatarValor(totalEntradasRelatorio)}
+                    </p>
+                  </div>
+
+                  <div className="card-resumo">
+                    <h3>Total de saídas</h3>
+                    <p className="valor-saida">
+                      {formatarValor(totalSaidasRelatorio)}
+                    </p>
+                  </div>
+
+                  <div className="card-resumo">
+                    <h3>Saldo do mês</h3>
+                    <p>{formatarValor(saldoRelatorio)}</p>
+                  </div>
+                </div>
+
+                <div className="resumo-financeiro">
+                  <div className="card-resumo">
+                    <h3>Vendas por PIX</h3>
+                    <p>{formatarValor(totalPixRelatorio)}</p>
+                  </div>
+
+                  <div className="card-resumo">
+                    <h3>Vendas em dinheiro</h3>
+                    <p>{formatarValor(totalEspecieRelatorio)}</p>
+                  </div>
+
+                  <div className="card-resumo">
+                    <h3>Vendas no cartão</h3>
+                    <p>{formatarValor(totalCartaoRelatorio)}</p>
+                  </div>
+                </div>
+
+                <div className="secao-despesas">
+                  <h3>Despesas por categoria</h3>
+
+                  {Object.keys(despesasPorCategoria).length === 0 ? (
+                    <p>Nenhuma despesa registrada neste mês.</p>
+                  ) : (
+                    <div className="lista-despesas-categoria">
+                      {Object.entries(despesasPorCategoria).map(
+                        ([categoria, valor]) => (
+                          <div
+                            className="item-despesa-categoria"
+                            key={categoria}
+                          >
+                            <strong>{categoria}</strong>
+                            <span>{formatarValor(valor)}</span>
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="secao-historico">
+                  <div className="cabecalho-historico">
+                    <h3>Histórico de movimentações</h3>
+
+                    <button
+                      type="button"
+                      className="botao-toggle-historico"
+                      onClick={() => setHistoricoExpandido(!historicoExpandido)}
+                    >
+                      {historicoExpandido ? "Recolher" : "Ver movimentações"}
+                      {historicoExpandido ? " ▲" : " ▼"}
+                    </button>
+                  </div>
+
+                  {movimentacoesDoRelatorio.length === 0 ? (
+                    <p>Nenhuma movimentação registrada neste mês.</p>
+                  ) : (
+                    <>
+                      {historicoExpandido && (
+                        <div className="lista-historico-relatorio">
+                          {[...movimentacoesDoRelatorio]
+                            .sort((a, b) => b.data.localeCompare(a.data))
+                            .map((item, indice) => (
+                              <div
+                                className="item-historico-relatorio"
+                                key={`${item.data}-${indice}`}
+                              >
+                                <div>
+                                  <strong>
+                                    {item.tipo === "entrada"
+                                      ? "Venda"
+                                      : item.descricao ||
+                                        item.categoria ||
+                                        "Despesa"}
+                                  </strong>
+
+                                  <span>
+                                    {new Date(
+                                      `${item.data}T00:00:00`,
+                                    ).toLocaleDateString("pt-BR")}
+                                  </span>
+                                </div>
+
+                                <strong
+                                  className={
+                                    item.tipo === "entrada"
+                                      ? "valor-entrada"
+                                      : "valor-saida"
+                                  }
+                                >
+                                  {formatarValor(item.valor)}
+                                </strong>
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                <button
+                  className="botao-voltar-relatorios"
+                  onClick={() => setTela("relatorios")}
+                >
+                  ← Voltar aos relatórios
+                </button>
+              </>
+            )}
+
+            {tela === "relatorio-semanal" && (
+              <>
+                <h2>Relatório semanal</h2>
+                <p>Consulte os resultados financeiros por semana.</p>
+
+                <div className="filtros-relatorio">
+                  <div>
+                    <label htmlFor="data-relatorio-semanal">
+                      Escolha uma data
+                    </label>
+
+                    <input
+                      type="date"
+                      id="data-relatorio-semanal"
+                      value={dataRelatorioSemanal}
+                      onChange={(e) => setDataRelatorioSemanal(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <p>
+                  <strong>Período:</strong>{" "}
+                  {inicioSemana.toLocaleDateString("pt-BR")} até{" "}
+                  {fimSemana.toLocaleDateString("pt-BR")}
+                </p>
+
+                <div className="resumo-financeiro">
+                  <div className="card-resumo">
+                    <h3>Total de entradas</h3>
+                    <p className="valor-entrada">
+                      {formatarValor(totalEntradasSemana)}
+                    </p>
+                  </div>
+
+                  <div className="card-resumo">
+                    <h3>Total de saídas</h3>
+                    <p className="valor-saida">
+                      {formatarValor(totalSaidasSemana)}
+                    </p>
+                  </div>
+
+                  <div className="card-resumo">
+                    <h3>Saldo da semana</h3>
+                    <p>{formatarValor(saldoSemana)}</p>
+                  </div>
+                </div>
+
+                <div className="resumo-financeiro">
+                  <div className="card-resumo">
+                    <h3>Vendas por PIX</h3>
+                    <p>{formatarValor(totalPixSemana)}</p>
+                  </div>
+
+                  <div className="card-resumo">
+                    <h3>Vendas em dinheiro</h3>
+                    <p>{formatarValor(totalEspecieSemana)}</p>
+                  </div>
+
+                  <div className="card-resumo">
+                    <h3>Vendas no cartão</h3>
+                    <p>{formatarValor(totalCartaoSemana)}</p>
+                  </div>
+                </div>
+
+                <div className="secao-despesas">
+                  <h3>Despesas por categoria</h3>
+
+                  {Object.keys(despesasPorCategoriaSemana).length === 0 ? (
+                    <p>Nenhuma despesa registrada nesta semana.</p>
+                  ) : (
+                    <div className="lista-despesas-categoria">
+                      {Object.entries(despesasPorCategoriaSemana).map(
+                        ([categoria, valor]) => (
+                          <div
+                            className="item-despesa-categoria"
+                            key={categoria}
+                          >
+                            <strong>{categoria}</strong>
+                            <span>{formatarValor(valor)}</span>
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="secao-historico">
+                  <div className="cabecalho-historico">
+                    <h3>Histórico de movimentações</h3>
+
+                    <button
+                      type="button"
+                      className="botao-toggle-historico"
+                      onClick={() =>
+                        setHistoricoSemanalExpandido(!historicoSemanalExpandido)
+                      }
+                    >
+                      {historicoSemanalExpandido
+                        ? "Recolher"
+                        : "Ver movimentações"}
+                      {historicoSemanalExpandido ? " ▲" : " ▼"}
+                    </button>
+                  </div>
+
+                  {movimentacoesDaSemana.length === 0 ? (
+                    <p>Nenhuma movimentação registrada nesta semana.</p>
+                  ) : (
+                    historicoSemanalExpandido && (
+                      <div className="lista-historico-relatorio">
+                        {[...movimentacoesDaSemana]
+                          .sort((a, b) => b.data.localeCompare(a.data))
+                          .map((item, indice) => (
+                            <div
+                              className="item-historico-relatorio"
+                              key={`${item.data}-${indice}`}
+                            >
+                              <div>
+                                <strong>
+                                  {item.tipo === "entrada"
+                                    ? "Venda"
+                                    : item.descricao ||
+                                      item.categoria ||
+                                      "Despesa"}
+                                </strong>
+
+                                <span>
+                                  {new Date(
+                                    `${item.data}T00:00:00`,
+                                  ).toLocaleDateString("pt-BR")}
+                                </span>
+                              </div>
+
+                              <strong
+                                className={
+                                  item.tipo === "entrada"
+                                    ? "valor-entrada"
+                                    : "valor-saida"
+                                }
+                              >
+                                {formatarValor(item.valor)}
+                              </strong>
+                            </div>
+                          ))}
+                      </div>
+                    )
+                  )}
+                </div>
+
+                <button
+                  className="botao-voltar-relatorios"
+                  onClick={() => setTela("relatorios")}
+                >
+                  ← Voltar aos relatórios
+                </button>
               </>
             )}
           </div>
