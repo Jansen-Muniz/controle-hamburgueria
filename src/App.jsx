@@ -1547,7 +1547,7 @@ const App = () => {
                     }
                     aria-label="Voltar ao topo"
                   >
-                    ↑ Voltar ao topo
+                    ↑
                   </button>
                 )}
               </>

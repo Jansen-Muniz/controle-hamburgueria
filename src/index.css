@@ -765,9 +765,9 @@ img {
 
 @media (max-width: 600px) {
   .botao-voltar-topo {
-    right: 7px;
     bottom: 15px;
     width: 50px;
+    right: 7px;
     height: 50px;
     font-size: 32px;
     font-weight: 900;
