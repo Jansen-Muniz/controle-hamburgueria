@@ -726,6 +726,55 @@ img {
   max-width: 260px;
 }
 
+.botao-voltar-topo {
+  position: fixed;
+  right: 25px;
+  bottom: 25px;
+  z-index: 1000;
+  background-color: #642020;
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+  transition:
+    background-color 0.2s,
+    transform 0.2s;
+}
+
+.botao-voltar-topo {
+  width: 45px;
+  height: 45px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 42px;
+  font-weight: 900;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.botao-voltar-topo:hover {
+  background-color: #842b2b;
+  transform: translateY(-3px);
+}
+
+@media (max-width: 600px) {
+  .botao-voltar-topo {
+    right: 7px;
+    bottom: 15px;
+    width: 50px;
+    height: 50px;
+    font-size: 32px;
+    font-weight: 900;
+    line-height: 1;
+  }
+}
+
 @media (max-width: 600px) {
   .item-historico-relatorio {
     padding: 12px;

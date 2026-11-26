@@ -33,12 +33,14 @@ const App = () => {
   const [busca, setBusca] = useState("")
   const [formaPagamento, setFormaPagamento] = useState("todas")
   const [historicoExpandido, setHistoricoExpandido] = useState(false)
+  const [mostrarBotaoTopo, setMostrarBotaoTopo] = useState(false)
   const [historicoSemanalExpandido, setHistoricoSemanalExpandido] =
     useState(false)
-  const [historicoEntradasAnualExpandido, setHistoricoEntradasAnualExpandido] =
-    useState(false)
-  const [historicoSaidasAnualExpandido, setHistoricoSaidasAnualExpandido] =
-    useState(false)
+  const [mesesEntradasAnualExpandidos, setMesesEntradasAnualExpandidos] =
+    useState([])
+  const [mesesSaidasAnualExpandidos, setMesesSaidasAnualExpandidos] = useState(
+    [],
+  )
   const [dataRelatorioSemanal, setDataRelatorioSemanal] = useState(
     new Date().toLocaleDateString("en-CA"),
   )
@@ -83,6 +85,18 @@ const App = () => {
 
     carregarMovimentacoes()
   }, [tela])
+
+  useEffect(() => {
+    const verificarRolagem = () => {
+      setMostrarBotaoTopo(window.scrollY > 300)
+    }
+
+    window.addEventListener("scroll", verificarRolagem)
+
+    return () => {
+      window.removeEventListener("scroll", verificarRolagem)
+    }
+  }, [])
 
   const formatarMoeda = (valor) => {
     const numeros = String(valor ?? "").replace(/\D/g, "")
@@ -1061,6 +1075,22 @@ const App = () => {
                 >
                   ← Voltar aos relatórios
                 </button>
+
+                {mostrarBotaoTopo && (
+                  <button
+                    type="button"
+                    className="botao-voltar-topo"
+                    onClick={() =>
+                      window.scrollTo({
+                        top: 0,
+                        behavior: "smooth",
+                      })
+                    }
+                    aria-label="Voltar ao topo"
+                  >
+                    ↑
+                  </button>
+                )}
               </>
             )}
 
@@ -1337,101 +1367,163 @@ const App = () => {
                     <p>Nenhuma movimentação registrada neste ano.</p>
                   ) : (
                     <>
-                      <div className="cabecalho-historico">
-                        <h3>Entradas</h3>
+                      {/* ENTRADAS */}
+                      <h3 className="titulo-grupo-historico">Entradas</h3>
 
-                        <button
-                          type="button"
-                          className="botao-toggle-historico"
-                          onClick={() =>
-                            setHistoricoEntradasAnualExpandido(
-                              !historicoEntradasAnualExpandido,
-                            )
-                          }
-                        >
-                          {historicoEntradasAnualExpandido
-                            ? "Recolher"
-                            : "Ver entradas"}
-                          {historicoEntradasAnualExpandido ? " ▲" : " ▼"}
-                        </button>
-                      </div>
+                      {Array.from({ length: 12 }, (_, indice) => {
+                        const numeroMes = String(indice + 1).padStart(2, "0")
 
-                      {historicoEntradasAnualExpandido && (
-                        <div className="lista-historico-relatorio">
-                          {movimentacoesDoAno
-                            .filter((item) => item.tipo === "entrada")
-                            .sort((a, b) => b.data.localeCompare(a.data))
-                            .map((item, indice) => (
-                              <div
-                                className="item-historico-relatorio"
-                                key={`entrada-${item.data}-${indice}`}
+                        const movimentacoesMes = movimentacoesDoAno
+                          .filter(
+                            (item) =>
+                              item.tipo === "entrada" &&
+                              item.data?.slice(5, 7) === numeroMes,
+                          )
+                          .sort((a, b) => b.data.localeCompare(a.data))
+
+                        if (movimentacoesMes.length === 0) return null
+
+                        const expandido =
+                          mesesEntradasAnualExpandidos.includes(numeroMes)
+
+                        return (
+                          <div key={`entradas-${numeroMes}`}>
+                            <div className="cabecalho-historico">
+                              <h3>
+                                {new Date(
+                                  Number(anoRelatorio),
+                                  indice,
+                                  1,
+                                ).toLocaleDateString("pt-BR", {
+                                  month: "long",
+                                })}
+                              </h3>
+
+                              <button
+                                type="button"
+                                className="botao-toggle-historico"
+                                onClick={() =>
+                                  setMesesEntradasAnualExpandidos((atuais) =>
+                                    expandido
+                                      ? atuais.filter(
+                                          (mes) => mes !== numeroMes,
+                                        )
+                                      : [...atuais, numeroMes],
+                                  )
+                                }
                               >
-                                <div>
-                                  <strong>Venda</strong>
-                                  <span>
-                                    {new Date(
-                                      `${item.data}T00:00:00`,
-                                    ).toLocaleDateString("pt-BR")}
-                                  </span>
-                                </div>
+                                {expandido ? "Recolher" : "Ver entradas"}
+                                {expandido ? " ▲" : " ▼"}
+                              </button>
+                            </div>
 
-                                <strong className="valor-entrada">
-                                  {formatarValor(item.valor)}
-                                </strong>
+                            {expandido && (
+                              <div className="lista-historico-relatorio">
+                                {movimentacoesMes.map((item, indice) => (
+                                  <div
+                                    className="item-historico-relatorio"
+                                    key={`entrada-${item.data}-${indice}`}
+                                  >
+                                    <div>
+                                      <strong>Venda</strong>
+                                      <span>
+                                        {new Date(
+                                          `${item.data}T00:00:00`,
+                                        ).toLocaleDateString("pt-BR")}
+                                      </span>
+                                    </div>
+
+                                    <strong className="valor-entrada">
+                                      {formatarValor(item.valor)}
+                                    </strong>
+                                  </div>
+                                ))}
                               </div>
-                            ))}
-                        </div>
-                      )}
+                            )}
+                          </div>
+                        )
+                      })}
 
-                      <div className="cabecalho-historico">
-                        <h3>Saídas</h3>
+                      {/* SAÍDAS */}
+                      <h3 className="titulo-grupo-historico">Saídas</h3>
 
-                        <button
-                          type="button"
-                          className="botao-toggle-historico"
-                          onClick={() =>
-                            setHistoricoSaidasAnualExpandido(
-                              !historicoSaidasAnualExpandido,
-                            )
-                          }
-                        >
-                          {historicoSaidasAnualExpandido
-                            ? "Recolher"
-                            : "Ver saídas"}
-                          {historicoSaidasAnualExpandido ? " ▲" : " ▼"}
-                        </button>
-                      </div>
+                      {Array.from({ length: 12 }, (_, indice) => {
+                        const numeroMes = String(indice + 1).padStart(2, "0")
 
-                      {historicoSaidasAnualExpandido && (
-                        <div className="lista-historico-relatorio">
-                          {movimentacoesDoAno
-                            .filter((item) => item.tipo === "saida")
-                            .sort((a, b) => b.data.localeCompare(a.data))
-                            .map((item, indice) => (
-                              <div
-                                className="item-historico-relatorio"
-                                key={`saida-${item.data}-${indice}`}
+                        const movimentacoesMes = movimentacoesDoAno
+                          .filter(
+                            (item) =>
+                              item.tipo === "saida" &&
+                              item.data?.slice(5, 7) === numeroMes,
+                          )
+                          .sort((a, b) => b.data.localeCompare(a.data))
+
+                        if (movimentacoesMes.length === 0) return null
+
+                        const expandido =
+                          mesesSaidasAnualExpandidos.includes(numeroMes)
+
+                        return (
+                          <div key={`saidas-${numeroMes}`}>
+                            <div className="cabecalho-historico">
+                              <h3>
+                                {new Date(
+                                  Number(anoRelatorio),
+                                  indice,
+                                  1,
+                                ).toLocaleDateString("pt-BR", {
+                                  month: "long",
+                                })}
+                              </h3>
+
+                              <button
+                                type="button"
+                                className="botao-toggle-historico"
+                                onClick={() =>
+                                  setMesesSaidasAnualExpandidos((atuais) =>
+                                    expandido
+                                      ? atuais.filter(
+                                          (mes) => mes !== numeroMes,
+                                        )
+                                      : [...atuais, numeroMes],
+                                  )
+                                }
                               >
-                                <div>
-                                  <strong>
-                                    {item.descricao ||
-                                      item.categoria ||
-                                      "Despesa"}
-                                  </strong>
-                                  <span>
-                                    {new Date(
-                                      `${item.data}T00:00:00`,
-                                    ).toLocaleDateString("pt-BR")}
-                                  </span>
-                                </div>
+                                {expandido ? "Recolher" : "Ver saídas"}
+                                {expandido ? " ▲" : " ▼"}
+                              </button>
+                            </div>
 
-                                <strong className="valor-saida">
-                                  {formatarValor(item.valor)}
-                                </strong>
+                            {expandido && (
+                              <div className="lista-historico-relatorio">
+                                {movimentacoesMes.map((item, indice) => (
+                                  <div
+                                    className="item-historico-relatorio"
+                                    key={`saida-${item.data}-${indice}`}
+                                  >
+                                    <div>
+                                      <strong>
+                                        {item.descricao ||
+                                          item.categoria ||
+                                          "Despesa"}
+                                      </strong>
+                                      <span>
+                                        {new Date(
+                                          `${item.data}T00:00:00`,
+                                        ).toLocaleDateString("pt-BR")}
+                                      </span>
+                                    </div>
+
+                                    <strong className="valor-saida">
+                                      {formatarValor(item.valor)}
+                                    </strong>
+                                  </div>
+                                ))}
                               </div>
-                            ))}
-                        </div>
-                      )}
+                            )}
+                          </div>
+                        )
+                      })}
                     </>
                   )}
                 </div>
@@ -1442,6 +1534,22 @@ const App = () => {
                 >
                   ← Voltar aos relatórios
                 </button>
+
+                {mostrarBotaoTopo && (
+                  <button
+                    type="button"
+                    className="botao-voltar-topo"
+                    onClick={() =>
+                      window.scrollTo({
+                        top: 0,
+                        behavior: "smooth",
+                      })
+                    }
+                    aria-label="Voltar ao topo"
+                  >
+                    ↑ Voltar ao topo
+                  </button>
+                )}
               </>
             )}
           </div>
