@@ -537,6 +537,15 @@ const App = () => {
                   <p>Informe os valores das vendas.</p>
 
                   <form className="formulario-entrada">
+                    <label>Data da venda</label>
+                    <input
+                      type="date"
+                      value={venda.data}
+                      onChange={(e) =>
+                        setVenda({ ...venda, data: e.target.value })
+                      }
+                    />
+
                     <label>PIX</label>
                     <input
                       type="text"
@@ -561,15 +570,6 @@ const App = () => {
                       placeholder="R$ 0,00"
                       value={venda.cartao}
                       onChange={(e) => atualizarValor("cartao", e.target.value)}
-                    />
-
-                    <label>Data da venda</label>
-                    <input
-                      type="date"
-                      value={venda.data}
-                      onChange={(e) =>
-                        setVenda({ ...venda, data: e.target.value })
-                      }
                     />
 
                     {mensagem && (
@@ -602,6 +602,15 @@ const App = () => {
                 <p>Informe os dados da despesa.</p>
 
                 <form className="formulario-entrada">
+                  <label>Data da despesa</label>
+                  <input
+                    type="date"
+                    value={despesa.data}
+                    onChange={(e) =>
+                      setDespesa({ ...despesa, data: e.target.value })
+                    }
+                  />
+
                   <label>Descrição</label>
                   <input
                     type="text"
@@ -640,14 +649,6 @@ const App = () => {
                         ...despesa,
                         valor: formatarMoeda(e.target.value),
                       })
-                    }
-                  />
-                  <label>Data da despesa</label>
-                  <input
-                    type="date"
-                    value={despesa.data}
-                    onChange={(e) =>
-                      setDespesa({ ...despesa, data: e.target.value })
                     }
                   />
 
